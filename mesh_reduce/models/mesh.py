@@ -1,6 +1,5 @@
 # encoding: utf-8
 
-
 class Mesh(object):
     __slots__ = 'name', 'index', 'vertices_index', 'triangles', 'vertices', 'bug'
 
@@ -81,7 +80,6 @@ class Mesh(object):
                 vertex.collapse_neighbor = neighbor
 
         vertex.collapse_cost = total_cost / cost_count
-        return vertex.collapse_cost
 
     def collapse(self, vertex):
         u = vertex
@@ -120,7 +118,7 @@ class Mesh(object):
         return vertex
 
     def reduce_vertex(self, degree):
-        print(self)
+        print('before: %s' % self)
         count = min(int(len(self.vertices) * degree), len(self.vertices) - 1)
         collapsed_count = 0
 
@@ -138,7 +136,7 @@ class Mesh(object):
             collapsed_count += 1
             self.collapse(vertex)
             vertex = self.get_vertex_of_minimum_cost()
-        print(self)
+        print('after : %s' % self)
 
     def jsonify(self):
 

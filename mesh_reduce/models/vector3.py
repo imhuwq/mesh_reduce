@@ -25,7 +25,7 @@ class Vector3(object):
     def distance_to(self, other):
         dx = self.x - other.x
         dy = self.y - other.y
-        dz = self.z = other.z
+        dz = self.z - other.z
         return sqrt(dx * dx + dy * dy + dz * dz)
 
     def add_triangle(self, triangle):
