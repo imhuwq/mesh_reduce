@@ -1,5 +1,6 @@
 # encoding: utf-8
 
+
 class Mesh(object):
     __slots__ = 'name', 'index', 'vertices_index', 'triangles', 'vertices', 'bug'
 
@@ -43,7 +44,7 @@ class Mesh(object):
     def compute_uv_cost(self, u, v):
 
         tu = u.triangles  # triangles_has_u
-        tuv = [triangle for triangle in u.triangles if triangle in v.triangles]  # triangles_has_uv
+        tuv = [triangle for triangle in tu if triangle.has_vertex(v)]  # triangles_has_uv
 
         distance = v.distance_to(u)
 
@@ -51,16 +52,22 @@ class Mesh(object):
         for u_face in tu:
             min_cost = 1  # min_cost 最终必定会小于 1
             for uv_face in tuv:
-                cost = (1 - u_face.normal.dot(uv_face.normal)) / 2
+                cost = (1.001 - u_face.normal.dot(uv_face.normal)) / 2
                 min_cost = min(min_cost, cost)
             max_cost = max(max_cost, min_cost)
+
+        if len(tuv) < 2:
+            max_cost = 1
 
         return distance * max_cost
 
     def compute_vertex_cost(self, vertex):
         if not vertex.neighbors:
+            vertex.collapse_cost = 0
             vertex.collapse_neighbor = None
             return
+        elif len(vertex.neighbors) == 2:
+            vertex.collapse_cost = 1
 
         min_cost = 0
         total_cost = 0
@@ -89,17 +96,14 @@ class Mesh(object):
             self.remove_vertex(u)
             return
 
-        # TODO: 为什么会出现v 不在面上的情况? PlayCanvas 的输出包含了重复的点!
-        # if v not in self.vertices:
-        #     raise BaseException('\n%s is collapsing to %s, but target is not on the mesh\n' % (u, v))
+        if v not in self.vertices:
+            raise BaseException('\n%s is collapsing to %s, but target is not on the mesh\n' % (u, v))
 
         neighbors = u.neighbors[:]
 
         for triangle in u.triangles[:]:
             if triangle.has_vertex(v):
                 self.remove_triangle(triangle)
-                if v and v.x == -17.1312 and v.y == 81.553 and v.z == -23.5315 and u.x == -17.6045 and u.y == 83.6304 and u.z == -23.5315:
-                    print('  removed the triangle')
             else:
                 triangle.replace_vertex(u, v)
 
@@ -120,23 +124,29 @@ class Mesh(object):
     def reduce_vertex(self, degree):
         print('before: %s' % self)
         count = min(int(len(self.vertices) * degree), len(self.vertices) - 1)
+        count = 6
         collapsed_count = 0
 
         for vertex in self.vertices:
-            if not vertex.neighbors and collapsed_count < count:
-                self.remove_vertex(vertex)
-                collapsed_count += 1
-                continue
-
             self.compute_vertex_cost(vertex)
 
         vertex = self.get_vertex_of_minimum_cost()
 
         while collapsed_count < count:
             collapsed_count += 1
+            if collapsed_count == 6:
+                print(vertex.neighbors)
+                print(vertex.triangles)
+                ts = vertex.triangles[:]
+                print('collapsing %s to %s' % (vertex, vertex.collapse_neighbor))
             self.collapse(vertex)
+            if collapsed_count == 6:
+                for t in ts:
+                    if t in self.triangles:
+                        print(t)
             vertex = self.get_vertex_of_minimum_cost()
         print('after : %s' % self)
+        print(self.bug)
 
     def jsonify(self):
 

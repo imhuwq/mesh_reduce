@@ -50,5 +50,5 @@ class Triangle(object):
         return sides[2] == sides[0] + sides[1]
 
     def __repr__(self):
-        return '<Vertices: p1%s, p2%s, p3%s>' \
+        return '<Vertices: p1%s, p2%s, p3%s>\n' \
                % (self.vertices[0], self.vertices[1], self.vertices[2])
